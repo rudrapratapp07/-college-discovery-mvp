@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String             @id @default(cuid())
+  name             String?
+  email            String             @unique
+  emailVerified    DateTime?
+  passwordHash     String?
+  image            String?
+  accounts         Account[]
+  savedColleges    SavedCollege[]
+  savedComparisons SavedComparison[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model College {
+  id            String          @id @default(cuid())
+  name          String
+  slug          String          @unique
+  city          String
+  state         String
+  country       String          @default("India")
+  rating        Float
+  annualFeesINR Int
+  overview      String          @db.Text
+  logoUrl       String?
+  courses       Course[]
+  placements    PlacementStat[]
+  reviews       Review[]
+  savedBy       SavedCollege[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([state])
+  @@index([annualFeesINR])
+  @@index([rating])
+}
+
+model Course {
+  id            String  @id @default(cuid())
+  collegeId     String
+  name          String
+  degree        String
+  durationYears Int
+  feesINR       Int
+  college       College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@index([collegeId])
+}
+
+model PlacementStat {
+  id                 String  @id @default(cuid())
+  collegeId          String
+  year               Int
+  avgPackageLPA      Float
+  highestPackageLPA  Float
+  placementPercent   Int
+  college            College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@index([collegeId])
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  collegeId  String
+  authorName String
+  rating     Int
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+  college    College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@index([collegeId])
+}
+
+model SavedCollege {
+  id        String   @id @default(cuid())
+  userId    String
+  collegeId String
+  savedAt   DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+  @@index([userId])
+}
+
+model SavedComparison {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String?
+  collegeIds Json
+  savedAt    DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
