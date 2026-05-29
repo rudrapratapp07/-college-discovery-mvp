@@ -12,7 +12,7 @@
   --accent: #d97706;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-brand: var(--brand);
